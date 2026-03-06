@@ -1,0 +1,31 @@
+@import "tailwindcss";
+
+:root {
+  --background: #09090b;
+  --foreground: #fafafa;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+}
+
+/* ── Performance: promote sticky header to its own GPU layer ── */
+header[class*="sticky"] {
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+/* ── Table rows: skip rendering off-screen rows entirely ── */
+tbody tr {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 52px;
+}
+
+/* ── Reduce motion for users who prefer it ── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

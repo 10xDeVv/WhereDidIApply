@@ -1,0 +1,30 @@
+package tech.wheredidiapply.proxy.error;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import java.time.Instant;
+
+@RestControllerAdvice
+public class GlobalExceptionHandler {
+
+    @ExceptionHandler(ApiException.class)
+    public ResponseEntity<ApiError> handle(ApiException ex) {
+        ApiError err = new ApiError(Instant.now(), ex.getStatus().value(), ex.getCode(), ex.getMessage());
+        return ResponseEntity.status(ex.getStatus()).body(err);
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiError> handleValidation(MethodArgumentNotValidException ex) {
+        ApiError err = new ApiError(Instant.now(), 400, "VALIDATION_ERROR", "Invalid request.");
+        return ResponseEntity.badRequest().body(err);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ApiError> handleGeneric(Exception ex) {
+        ApiError err = new ApiError(Instant.now(), 500, "INTERNAL_ERROR", "Something went wrong.");
+        return ResponseEntity.status(500).body(err);
+    }
+}

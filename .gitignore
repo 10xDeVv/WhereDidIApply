@@ -1,0 +1,49 @@
+# ── Dependencies ──
+node_modules/
+
+# ── Next.js ──
+.next/
+out/
+
+# ── Java / Maven ──
+target/
+*.jar
+*.war
+*.class
+!.mvn/wrapper/maven-wrapper.jar
+
+# ── Environment files ──
+.env
+.env.local
+.env.*.local
+
+# ── IDE ──
+.idea/
+*.iws
+*.iml
+*.ipr
+.vscode/
+*.swp
+*.swo
+
+# ── OS ──
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# ── Build ──
+build/
+dist/
+
+# ── Spring Boot ──
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+# ── Misc ──
+*.log
+npm-debug.log*
