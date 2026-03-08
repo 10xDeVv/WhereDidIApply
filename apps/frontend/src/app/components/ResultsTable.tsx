@@ -483,7 +483,6 @@ const ResultsTable = React.memo(function ResultsTable({
 
 export default ResultsTable;
 
-// ── Helper components ──────────────────────────────────────
 
 function DetailField({ label, value, children }: { label: string; value?: string; children?: React.ReactNode }) {
   return (

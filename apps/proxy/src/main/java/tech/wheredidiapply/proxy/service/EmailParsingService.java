@@ -19,7 +19,6 @@ public class EmailParsingService {
     private final GeminiClient geminiClient;
     private final PromptBuilder promptBuilder;
 
-    // ── Role extraction patterns ──
     private static final Pattern ROLE_PAT_1 = Pattern.compile(
             "appl(?:ying|ied|ication)\\s+(?:to|for)\\s+(?:the\\s+)?(.+?)\\s+(?:position|role|job)\\b",
             Pattern.CASE_INSENSITIVE);
@@ -36,11 +35,9 @@ public class EmailParsingService {
             "interest\\s+in\\s+(?:the\\s+)?(.+?)\\s+(?:position|role|opportunity)\\b",
             Pattern.CASE_INSENSITIVE);
 
-    // ── From-header parsing ──
     private static final Pattern FROM_DISPLAY_NAME = Pattern.compile("^\\s*\"?(.+?)\"?\\s*<.+>\\s*$");
     private static final Pattern FROM_EMAIL_DOMAIN = Pattern.compile("@([A-Za-z0-9.-]+)");
 
-    // ── Known domain → company mappings (popular platforms to EXCLUDE) ──
     private static final Set<String> JOB_BOARD_DOMAINS = Set.of(
             "linkedin.com", "indeed.com", "glassdoor.com", "greenhouse.io",
             "lever.co", "myworkdayjobs.com", "smartrecruiters.com",
@@ -64,21 +61,17 @@ public class EmailParsingService {
         String from = nz(request.getFrom());
         String body = sanitizeEmail(nz(request.getEmailContent()), 12000);
 
-        // ── STEP 1: Pre-filter — is this even a job email? ──
         if (!TextRules.isLikelyJobEmail(subject, from, body)) {
             return ParseEmailResponse.unknown(request.getMessageId(), "rules_prefilter");
         }
 
-        // ── STEP 2: Rules-based classification ──
         TextRules.RuleResult rule = TextRules.classify(subject, from, body);
 
-        // ── STEP 3: Cheap extraction — company + role ──
         String company = extractCompany(from, subject, body);
         String role = extractRole(subject, body);
         String location = null;
         String eventDate = null;
 
-        // ── STEP 4: Only skip Gemini if VERY confident AND we have BOTH company AND role ──
         boolean veryConfident = rule.confidence() >= 0.90
                 && !"OTHER".equals(rule.classification());
         boolean hasBothFields = notBlank(company) && notBlank(role);
@@ -89,7 +82,6 @@ public class EmailParsingService {
                     Map.of("engine", "rules"));
         }
 
-        // ── STEP 5: Call Gemini for everything else ──
         String prompt = promptBuilder.build(request);
         GeminiClient.GeminiParsed parsed;
         try {
@@ -104,7 +96,6 @@ public class EmailParsingService {
                             e.getMessage() != null ? e.getMessage() : "unknown"));
         }
 
-        // ── STEP 6: Smart merge — prefer Gemini for extraction, rules for signals ──
         String mergedClassification = mergeField(rule.classification(), parsed.classification(),
                 rule.confidence(), parsed.confidence());
         String mergedStatus = mergeField(rule.status(), parsed.status(),
@@ -131,9 +122,7 @@ public class EmailParsingService {
         );
     }
 
-    // ──────────────────────────────────────────────────────────────────
     // Company extraction
-    // ──────────────────────────────────────────────────────────────────
 
     private String extractCompany(String from, String subject, String body) {
         // 1) Try parsing the display name from From header
@@ -215,9 +204,7 @@ public class EmailParsingService {
         return JOB_BOARD_DOMAINS.stream().anyMatch(domain::endsWith);
     }
 
-    // ──────────────────────────────────────────────────────────────────
     // Role extraction
-    // ──────────────────────────────────────────────────────────────────
 
     private String extractRole(String subject, String body) {
         // Try subject first (highest signal)
@@ -242,9 +229,7 @@ public class EmailParsingService {
         return role.isEmpty() ? null : role;
     }
 
-    // ──────────────────────────────────────────────────────────────────
     // Merge helpers
-    // ──────────────────────────────────────────────────────────────────
 
     /**
      * For classification/status: prefer whichever source is more confident,
@@ -274,9 +259,7 @@ public class EmailParsingService {
         return null;
     }
 
-    // ──────────────────────────────────────────────────────────────────
     // Response builder
-    // ──────────────────────────────────────────────────────────────────
 
     private ParseEmailResponse buildResponse(
             ParseEmailRequest request,
@@ -306,9 +289,7 @@ public class EmailParsingService {
         );
     }
 
-    // ──────────────────────────────────────────────────────────────────
     // Utility
-    // ──────────────────────────────────────────────────────────────────
 
     private String extractDomain(String from) {
         if (from == null) return null;

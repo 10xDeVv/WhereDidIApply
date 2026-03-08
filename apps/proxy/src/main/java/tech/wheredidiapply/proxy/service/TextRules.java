@@ -6,7 +6,6 @@ import java.util.regex.Pattern;
 public final class TextRules {
     private TextRules() {}
 
-    // ─── Rejection patterns (contextual — not bare "unfortunately") ───
     private static final Pattern REJECT_1 = Pattern.compile(
             "\\bnot\\s+(?:going\\s+to\\s+)?move\\s+forward\\b", Pattern.CASE_INSENSITIVE);
     private static final Pattern REJECT_2 = Pattern.compile(
@@ -28,7 +27,6 @@ public final class TextRules {
     private static final Pattern REJECT_10 = Pattern.compile(
             "\\bunable\\s+to\\s+offer\\s+you\\b", Pattern.CASE_INSENSITIVE);
 
-    // ─── Interview patterns ───
     private static final Pattern INTERVIEW_1 = Pattern.compile(
             "\\binvit(?:e|ed|ing)\\s+(?:you\\s+)?(?:to|for)\\s+(?:an?\\s+)?(?:phone\\s+|video\\s+|virtual\\s+|technical\\s+|on-?site\\s+)?interview",
             Pattern.CASE_INSENSITIVE);
@@ -43,7 +41,6 @@ public final class TextRules {
             "\\bnext\\s+(?:round|stage|step)\\s+(?:of\\s+)?(?:the\\s+)?(?:interview|hiring|selection)\\b",
             Pattern.CASE_INSENSITIVE);
 
-    // ─── OA / Assessment patterns ───
     private static final Pattern OA_1 = Pattern.compile(
             "\\b(?:online|coding|technical)\\s+(?:assessment|challenge|test)\\b", Pattern.CASE_INSENSITIVE);
     private static final Pattern OA_2 = Pattern.compile(
@@ -52,7 +49,6 @@ public final class TextRules {
             "\\bcomplete\\s+(?:the|your|an?)\\s+(?:online\\s+)?(?:assessment|challenge|test)\\b",
             Pattern.CASE_INSENSITIVE);
 
-    // ─── Offer patterns ───
     private static final Pattern OFFER_1 = Pattern.compile(
             "\\bpleas(?:e|ed)\\s+to\\s+(?:extend|offer|present)\\b", Pattern.CASE_INSENSITIVE);
     private static final Pattern OFFER_2 = Pattern.compile(
@@ -62,7 +58,6 @@ public final class TextRules {
     private static final Pattern OFFER_4 = Pattern.compile(
             "\\boffer\\s+letter\\b", Pattern.CASE_INSENSITIVE);
 
-    // ─── Action required patterns ───
     private static final Pattern ACTION_1 = Pattern.compile(
             "\\bcomplete\\s+(?:your|the|our)\\s+(?:application|profile)\\b", Pattern.CASE_INSENSITIVE);
     private static final Pattern ACTION_2 = Pattern.compile(
@@ -70,13 +65,11 @@ public final class TextRules {
     private static final Pattern ACTION_3 = Pattern.compile(
             "\\bto\\s+proceed\\b.*\\bsubmit\\b", Pattern.CASE_INSENSITIVE);
 
-    // ─── Under review patterns ───
     private static final Pattern REVIEW_1 = Pattern.compile(
             "\\b(?:application\\s+(?:is\\s+)?)?(?:currently\\s+)?under\\s+review\\b", Pattern.CASE_INSENSITIVE);
     private static final Pattern REVIEW_2 = Pattern.compile(
             "\\breviewing\\s+your\\s+(?:application|resume|profile|qualifications)\\b", Pattern.CASE_INSENSITIVE);
 
-    // ─── Application received / confirmation ───
     private static final Pattern RECEIVED_1 = Pattern.compile(
             "\\b(?:we\\s+)?(?:have\\s+)?received\\s+your\\s+application\\b", Pattern.CASE_INSENSITIVE);
     private static final Pattern RECEIVED_2 = Pattern.compile(
@@ -90,7 +83,6 @@ public final class TextRules {
     private static final Pattern RECEIVED_5 = Pattern.compile(
             "\\bthank\\s+you\\s+for\\s+your\\s+interest\\b", Pattern.CASE_INSENSITIVE);
 
-    // ─── Job-email detection signals (for isLikelyJobEmail) ───
     private static final Pattern JOB_FROM_PATTERN = Pattern.compile(
             "(?:career|recruit|talent|jobs?|hiring|hr|people|staffing)s?[@.]",
             Pattern.CASE_INSENSITIVE);

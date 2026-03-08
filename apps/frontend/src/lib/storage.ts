@@ -52,7 +52,6 @@ export function clearResults(): void {
     }
 }
 
-// ── User edits persistence ──
 
 type EditsMap = Record<string, Partial<AppRow> | "__deleted__">;
 

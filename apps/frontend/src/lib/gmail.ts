@@ -33,7 +33,6 @@ export class GmailAuthError extends Error {
 export function buildJobEmailQuery(days: number): string {
     // Body/subject phrase signals — exact phrases in quotes for precision
     const phrases = [
-        // ── Application confirmations ──
         '"your application"',
         '"thank you for applying"',
         '"thanks for applying"',
@@ -47,7 +46,6 @@ export function buildJobEmailQuery(days: number): string {
         '"successfully submitted"',
         '"successfully applied"',
         '"confirming your application"',
-        // ── Review / status updates ──
         '"under review"',
         '"being reviewed"',
         '"reviewing your"',
@@ -55,7 +53,6 @@ export function buildJobEmailQuery(days: number): string {
         '"regarding your application"',
         '"update on your application"',
         '"status of your application"',
-        // ── Interview ──
         '"interview invitation"',
         '"interview scheduled"',
         '"phone screen"',
@@ -68,7 +65,6 @@ export function buildJobEmailQuery(days: number): string {
         '"move forward with your"',
         '"like to invite you"',
         '"advance to the next"',
-        // ── Assessment / OA ──
         '"online assessment"',
         '"coding challenge"',
         '"coding test"',
@@ -77,13 +73,11 @@ export function buildJobEmailQuery(days: number): string {
         '"hackerrank"',
         '"codesignal"',
         '"codility"',
-        // ── Offer ──
         '"offer letter"',
         '"job offer"',
         '"offer of employment"',
         '"pleased to offer"',
         '"excited to offer"',
-        // ── Rejection ──
         '"not moving forward"',
         '"after careful consideration"',
         '"we regret to"',
@@ -92,7 +86,6 @@ export function buildJobEmailQuery(days: number): string {
         '"position has been filled"',
         '"pursuing other candidates"',
         '"will not be moving"',
-        // ── ATS platforms (these send from unique domains) ──
         '"workday"',
         '"greenhouse"',
         '"lever.co"',

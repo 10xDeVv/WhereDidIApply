@@ -52,7 +52,6 @@ export default function Home() {
   // Key = row key, value = partial overrides or "__deleted__"
   const [userEdits, setUserEdits] = useState<Record<string, Partial<AppRow> | "__deleted__">>({});
 
-  // ── Streaming-batch buffer (avoids a re-render per email) ──
   const pendingItems = useRef<ParsedItem[]>([]);
   const pendingProgress = useRef<{ done: number; total: number }>({ done: 0, total: 0 });
   const flushTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -88,7 +87,6 @@ export default function Home() {
 
   const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!;
 
-  // ── Stable edit / delete handlers (prevents ResultsTable re-renders) ──
   const handleEdit = useCallback(
     (key: string, updates: Partial<Pick<AppRow, "company" | "role" | "status">>) => {
       setUserEdits((prev) => {
@@ -108,9 +106,7 @@ export default function Home() {
     });
   }, []);
 
-  // ──────────────────────────────────────────────────────────
   // Restore cached results on mount
-  // ──────────────────────────────────────────────────────────
 
   useEffect(() => {
     const stored = loadResults();
@@ -122,9 +118,7 @@ export default function Home() {
     if (edits) setUserEdits(edits);
   }, []);
 
-  // ──────────────────────────────────────────────────────────
   // Save results when scan completes
-  // ──────────────────────────────────────────────────────────
 
   useEffect(() => {
     if (phase === "done" && rows.length > 0) {
@@ -134,9 +128,7 @@ export default function Home() {
     }
   }, [phase, rows, days, items.length]);
 
-  // ──────────────────────────────────────────────────────────
   // Auth
-  // ──────────────────────────────────────────────────────────
 
   const requestToken = useCallback((): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -178,9 +170,7 @@ export default function Home() {
     return requestToken();
   }, [accessToken, requestToken]);
 
-  // ──────────────────────────────────────────────────────────
   // Scan — streams results live as each email completes
-  // ──────────────────────────────────────────────────────────
 
   async function runScan() {
     setError(null);
@@ -320,9 +310,7 @@ export default function Home() {
     }
   }
 
-  // ──────────────────────────────────────────────────────────
   // Render
-  // ──────────────────────────────────────────────────────────
 
   if (!accessToken) {
     return (
