@@ -60,6 +60,9 @@ WhereDidIApply connects to your Gmail (read-only), finds job application emails,
 | AI/LLM | Google Gemini 2.0 Flash (structured JSON output) |
 | Auth | Google OAuth 2.0 (Gmail read-only scope) |
 | Security | HMAC-signed run tokens, per-run rate limiting, concurrency semaphores |
+| DevOps | GitHub Actions CI/CD, Google Cloud Run, Workload Identity Federation |
+| Observability | Logback (Structured JSON Logging), Spring Boot Actuator, Swagger/OpenAPI |
+| Resilience | Resilience4j (Circuit Breaker) |
 
 ## Quick Start
 
@@ -162,9 +165,18 @@ WhereDidIApply/
 3. **Marketing skip** — Obvious marketing/promo emails are rejected before any classification
 4. **Rules engine** — 30+ regex patterns attempt to classify the email (rejection, interview, offer, etc.)
 5. **Confidence check** — If rules are ≥90% confident AND extracted both company + role → return immediately
-6. **Gemini fallback** — For everything else, the email is sent to Gemini with a structured JSON schema
-7. **Smart merge** — Rules and Gemini results are merged, preferring whichever source is more confident
-8. **Dedup & merge** — Frontend merges multiple emails about the same company+role into a single row
+6. **Circuit Breaker** — If Google's API is slow or down, Resilience4j immediately intercepts the request and falls back to a safe "Unknown" status, preventing system hangs.
+7. **Gemini fallback** — For everything else, the email is sent to Gemini with a structured JSON schema
+8. **Smart merge** — Rules and Gemini results are merged, preferring whichever source is more confident
+9. **Dedup & merge** — Frontend merges multiple emails about the same company+role into a single row
+
+## Production & Observability Features
+
+To ensure reliability at scale, the backend includes:
+- **Interactive API Docs (OpenAPI/Swagger)**: Available at `/api/swagger-ui.html` for easy testing and integration.
+- **Structured JSON Logging**: Logs are emitted in Logstash JSON format for seamless ingestion into Datadog, Splunk, or Google Cloud Logging.
+- **Automated CI/CD**: GitHub Actions pipeline automatically runs tests and deploys to Google Cloud Run using Workload Identity Federation (keyless authentication).
+- **Health Metrics**: Spring Boot Actuator endpoints (`/actuator/health`, `/actuator/metrics`) are exposed for uptime monitoring.
 
 ## License
 

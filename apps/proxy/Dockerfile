@@ -18,7 +18,7 @@ WORKDIR /app
 COPY --from=builder /app/target/*.jar app.jar
 
 ENV GEMINI_API_KEY=""
-ENV RUN_TOKEN_SECRET="change-me-in-production"
+ENV RUN_TOKEN_SECRET=""
 
 EXPOSE 8080
 

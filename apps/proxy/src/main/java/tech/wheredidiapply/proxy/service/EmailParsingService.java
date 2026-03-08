@@ -8,9 +8,13 @@ import tech.wheredidiapply.proxy.model.ParseEmailResponse;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Service
 public class EmailParsingService {
+
+    private static final Logger log = LoggerFactory.getLogger(EmailParsingService.class);
 
     private final GeminiClient geminiClient;
     private final PromptBuilder promptBuilder;
@@ -92,8 +96,8 @@ public class EmailParsingService {
             parsed = geminiClient.parse(prompt);
         } catch (Exception e) {
             // Gemini failed — fall back to rules rather than crashing
-            System.err.println("WARN: Gemini failed for messageId=" + request.getMessageId()
-                    + " (" + e.getClass().getSimpleName() + ": " + e.getMessage() + "). Using rules-only.");
+            log.warn("Gemini failed for messageId={} ({}: {}). Using rules-only.",
+                    request.getMessageId(), e.getClass().getSimpleName(), e.getMessage());
             return buildResponse(request, rule.classification(), rule.status(), rule.confidence(),
                     company, role, location, eventDate, Collections.emptyList(),
                     Map.of("engine", "rules_fallback", "gemini_error",

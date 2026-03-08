@@ -18,8 +18,9 @@
 8. [Frontend Architecture & Data Flow](#8-frontend-architecture--data-flow)
 9. [Gemini Integration & Resilience](#9-gemini-integration--resilience)
 10. [Merge & Deduplication Logic](#10-merge--deduplication-logic)
-11. [Project Structure](#11-project-structure)
-12. [Technology Decisions & Trade-offs](#12-technology-decisions--trade-offs)
+11. [Observability & DevOps](#11-observability--devops)
+12. [Project Structure](#12-project-structure)
+13. [Technology Decisions & Trade-offs](#13-technology-decisions--trade-offs)
 
 ---
 
@@ -87,6 +88,7 @@ graph TB
     Gemini --> Prompt
     Gemini -->|"6. LLM call (if needed)"| GeminiAPI
     GeminiAPI -->|"7. Structured JSON"| Gemini
+    Gemini -.->|"Circuit Breaker Open"| Pipeline
     Pipeline -->|"8. Classification result"| Controller
     Controller -->|"9. Response"| ProxyLib
     ProxyLib --> MergeLib
@@ -239,9 +241,9 @@ flowchart TD
 
     PROMPT["PromptBuilder.build()<br/><i>Structured prompt with<br/>classification options +<br/>extraction rules + email text</i>"] --> GEMINI
 
-    GEMINI["GeminiClient.parse()<br/><i>POST to Gemini 2.0 Flash<br/>JSON schema enforced<br/>Retry with backoff</i>"]
+    GEMINI["GeminiClient.parse()<br/><i>POST to Gemini 2.0 Flash<br/>JSON schema enforced<br/>Retry with backoff<br/>Resilience4j Circuit Breaker</i>"]
     GEMINI -->|"Success"| MERGE
-    GEMINI -->|"Failure"| FALLBACK["Return rules result<br/><i>engine: rules_fallback</i>"]
+    GEMINI -->|"Failure / Timeout / Circuit Open"| FALLBACK["Return rules result<br/><i>engine: rules_fallback</i>"]
 
     MERGE["Smart Merge<br/><i>Classification: higher confidence wins<br/>(unless one says OTHER — prefer specific)<br/>Extraction: prefer Gemini<br/>(better contextual understanding)</i>"]
     MERGE --> RESULT["Return merged result<br/><i>engine: gemini</i>"]
@@ -599,7 +601,33 @@ flowchart TD
 
 ---
 
-## 11. Project Structure
+## 11. Observability & DevOps
+
+WhereDidIApply is built for production readiness, utilizing standard cloud-native operational patterns.
+
+### Structured Logging (JSON)
+All backend logs are emitted in **Logstash JSON format** via `logback-spring.xml`. 
+This allows cloud logging platforms (GCP Cloud Logging, Datadog) to instantly index fields (e.g., `logger`, `level`, `timestamp`) rather than relying on brittle regex parsing of plain text logs.
+
+### Circuit Breaker (Resilience4j)
+To protect the backend from hanging threads when the Gemini API degrades, a **Circuit Breaker** is applied to `GeminiClient`:
+1. If the LLM fails or times out repeatedly (e.g., 50% failure rate over a sliding window), the circuit **Opens**.
+2. Subsequent requests immediately fail fast, returning a `503 Service Unavailable` without attempting the network call.
+3. The `EmailParsingService` catches this and gracefully degrades to returning the **Rules-Only** classification, ensuring the user still gets results (even if slightly less accurate) rather than a crashed request.
+
+### API Documentation (OpenAPI/Swagger)
+The backend exposes interactive API documentation via Springdoc OpenAPI. In development, it is available at `/api/swagger-ui.html`.
+
+### CI/CD Pipeline
+Deployment is fully automated via **GitHub Actions**:
+1. **CI**: On Pull Request, the code is compiled and tested (`mvn test`).
+2. **CD**: On push to `main`, a Docker image is built and pushed to Google Artifact Registry.
+3. **Deployment**: The image is deployed to **Google Cloud Run** (serverless).
+4. **Security**: The pipeline uses **Workload Identity Federation** to authenticate with GCP, eliminating the need to store long-lived Service Account JSON keys in GitHub Secrets.
+
+---
+
+## 12. Project Structure
 
 ```
 WhereDidIApply/
@@ -673,7 +701,7 @@ WhereDidIApply/
 
 ---
 
-## 12. Technology Decisions & Trade-offs
+## 13. Technology Decisions & Trade-offs
 
 | Decision | Alternatives Considered | Why This Choice |
 |----------|------------------------|-----------------|
@@ -683,6 +711,8 @@ WhereDidIApply/
 | **No database** | PostgreSQL, Redis | Nothing needs persistence. Run tokens are self-validating. Rate limits are ephemeral (120 min max). Adding a DB adds operational complexity for zero benefit. |
 | **Spring WebFlux WebClient** (not RestTemplate) | `RestTemplate`, `HttpClient` | WebClient supports non-blocking I/O and reactive retry (`.retryWhen()`). RestTemplate is synchronous and deprecated for new projects. |
 | **Gemini 2.0 Flash** (not GPT-4, Claude) | OpenAI GPT-4, Claude 3.5 | Free tier with generous limits. Structured JSON output mode eliminates parsing issues. Low latency (~1-2s). |
+| **Resilience4j Circuit Breaker** | Manual try/catch timeouts | Standardized way to handle cascading failures in distributed systems. Prevents thread exhaustion when upstream APIs degrade. |
+| **JSON Logging (Logback)** | Standard console text logs | JSON logs are machine-readable, making observability and querying in cloud environments (like GCP/Datadog) trivial. |
 | **localStorage** (not server-side cache) | Redis, cookies, IndexedDB | Results are private (never leave the browser). localStorage is simple, synchronous, and sufficient for the data size. |
 | **250ms flush batching** (not requestAnimationFrame) | `requestAnimationFrame`, no batching | 250ms is fast enough to feel real-time but slow enough to batch 4-10 results per flush. `rAF` would fire 60x/sec (overkill). |
 | **CSS `content-visibility: auto`** on table rows | Virtual scrolling (react-virtual) | Zero-dependency solution. Browser natively skips layout/paint for off-screen rows. Virtual scrolling adds complexity and library weight. |

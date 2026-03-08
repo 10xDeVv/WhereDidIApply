@@ -2,6 +2,9 @@ package tech.wheredidiapply.proxy.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -16,6 +19,8 @@ import java.util.*;
 
 @Component
 public class GeminiClient {
+
+    private static final Logger log = LoggerFactory.getLogger(GeminiClient.class);
 
     private final WebClient webClient;
     private final ObjectMapper om = new ObjectMapper();
@@ -35,6 +40,7 @@ public class GeminiClient {
         this.webClient = WebClient.builder().build();
     }
 
+    @CircuitBreaker(name = "gemini", fallbackMethod = "fallbackParse")
     public GeminiParsed parse(String prompt) {
         if (apiKey == null || apiKey.isBlank()) {
             throw new ApiException(HttpStatus.INTERNAL_SERVER_ERROR, "GEMINI_KEY_MISSING",
@@ -134,6 +140,20 @@ public class GeminiClient {
         }
     }
 
+    public GeminiParsed fallbackParse(String prompt, Exception e) {
+        // Log the reason
+        log.warn("Gemini fallback triggered: {} ({})", e.getMessage(), e.getClass().getSimpleName());
+
+        // If it's a specific API exception that is NOT a 5xx (e.g. Bad Request), rethrow it
+        // so we don't hide client errors.
+        if (e instanceof ApiException ae && !ae.getStatus().is5xxServerError()) {
+             throw ae;
+        }
+
+        // Otherwise (Timeout, 500, CircuitOpen), throw a 503 so the caller knows the AI is down
+        throw new ApiException(HttpStatus.SERVICE_UNAVAILABLE, "GEMINI_DOWN", "AI Service unavailable.");
+    }
+
     private String extractCandidateText(String respBody) {
         try {
             JsonNode resp = om.readTree(respBody);
@@ -154,7 +174,7 @@ public class GeminiClient {
             // Check finish reason — SAFETY or RECITATION means the content was filtered
             String finishReason = candidate.path("finishReason").asText("");
             if ("SAFETY".equalsIgnoreCase(finishReason) || "RECITATION".equalsIgnoreCase(finishReason)) {
-                System.err.println("WARN: Gemini candidate blocked with finishReason=" + finishReason);
+                log.warn("Gemini candidate blocked with finishReason={}", finishReason);
                 return null;
             }
 
