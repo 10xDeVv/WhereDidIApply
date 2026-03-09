@@ -24,7 +24,7 @@ spring:
 proxy:
   cors:
     allowed:
-      origins: "${PROXY_CORS_ALLOWED_ORIGINS:http://localhost:3000,https://wheredidiapply.tech}"
+      origins: "${PROXY_CORS_ALLOWED_ORIGINS:http://localhost:3000,https://wheredidiapply.tech,https://www.wheredidiapply.tech}"
 
   token:
     secret: "${RUN_TOKEN_SECRET}"
