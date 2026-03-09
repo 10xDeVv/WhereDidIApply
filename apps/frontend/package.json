@@ -9,7 +9,10 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@eslint/eslintrc": "^3.3.5",
+    "@eslint/js": "^10.0.1",
     "@react-oauth/google": "^0.13.4",
+    "framer-motion": "^12.35.1",
     "lucide-react": "^0.468.0",
     "next": "15.1.11",
     "papaparse": "^5.5.3",
@@ -22,8 +25,8 @@
     "@types/papaparse": "^5.5.2",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "eslint": "^9",
-    "eslint-config-next": "15.1.6",
+    "eslint": "^8.56.0",
+    "eslint-config-next": "^15.1.6",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
